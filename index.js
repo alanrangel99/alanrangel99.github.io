@@ -6,51 +6,26 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 18,
 }).addTo(map);
 
-
-
-  /*var geojson = L.geoJSON(polygon.toGeoJSON(), {
-    style: {
-      fillColor: "#ff0000",
-      fillOpacity: 0.2,
-      color: "#ff0000",
-      weight: 2
-    }
-  }).addTo(map);
-
-  geojson.on("mouseover", function(e) {
-    alert("Estás dentro de la geocerca");
-
-  });
+  var polygons = [
+    L.polygon([
+      [19.3281979, -99.193614],
+      [19.3281979, -99.1928635],
+      [19.3281979, -99.193614]
+    ]),
+    L.polygon([
+      [19.4763783, -99.0796847],
+      [19.3637525, -98.9931547],
+      [18.9318634, -99.3229668]
+    ]),
+    L.polygon([
+      [19.4311768, -99.2062547],
+      [19.4311768, -99.2062547],
+      [19.4345443, -99.1794696]
+    ])
+  ];
   
-  geojson.on("mouseout", function(e) {
-    alert("Estás fuera de la geocerca");
-  });*/
-  var polygon = L.polygon([
-    [19.4612635, -99.1394819],
-    [19.4588689,-99.1331606],
-    [19.6228157, -99.179828]
-  ]).addTo(map);
-  var geojson = L.geoJSON(polygon.toGeoJSON(), {
-    style: {
-      fillColor: "#ff0000",
-      fillOpacity: 0.2,
-      color: "#ff0000",
-      weight: 2
-    }
-  }).addTo(map);
-  function onLocationFound(e) {
-    var marker = L.marker(e.latlng).addTo(map);
-    if (polygon.getBounds().contains(marker.getLatLng())) {
-      console.log('El rastreador GPS está dentro de la geocerca');
-     
-    } else {
-      console.log('El rastreador GPS está fuera de la geocerca');
-      var popup = L.popup()
-    .setLatLng(e.latlng)
-    .setContent("El rastrador GPS está fuera de la geocerca")
-    .openOn(map);
-        alarma();
-    }
+  for (var i = 0; i < polygons.length; i++) {
+    polygons[i].addTo(map);
   }
   
   function alarma(){
@@ -59,6 +34,33 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       audio.autoplay = true;
       audio.load();
   }
+  
+  var marker = null;
+
+  function onLocationFound(e) {
+    var radius = e.accuracy / 2;
+    
+    if (marker) {
+      marker.setLatLng(e.latlng);
+    } else {
+      marker = L.marker(e.latlng).addTo(map);
+    }
+    
+    for (var i = 0; i < polygons.length; i++) {
+      if (polygons[i].getBounds().contains(marker.getLatLng())) {
+        console.log('El rastreador GPS está dentro de la geocerca ' + (i + 1));
+        break;
+      }else{
+        console.log('El rastreador GPS está fuera de la geocerca '+ (i + 1));
+        var popup = L.popup()
+      .setLatLng(e.latlng)
+      .setContent("El rastreador GPS está fuera de la geocerca "+ (i + 1))
+      .openOn(map);
+          alarma();
+      }
+    }
+  }
+  
   function onLocationError(e) {
     console.log(e.message);
   }
@@ -67,6 +69,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   map.on('locationerror', onLocationError);
   
   map.locate({setView: true, maxZoom: 16, watch: true});
-
+  
 
   
